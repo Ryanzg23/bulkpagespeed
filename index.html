@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bulk PageSpeed Link Generator</title>
+<style>
+  body {
+    background: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+  }
+  h2 {
+    color: #00e676;
+    margin-bottom: 15px;
+  }
+  textarea {
+    width: 90%;
+    max-width: 600px;
+    height: 150px;
+    background: #222;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    resize: none;
+	      border: 1px solid #444;
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  button {
+    background: #28a745;
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background 0.3s, transform 0.2s;
+  }
+  button:hover {
+    background: #00e676;
+    transform: scale(1.05);
+  }
+  #copyBtn {
+    display: none; /* hidden until links are generated */
+  }
+	#openAllBtn{ background: #007bff; }
+	#copyBtn{ background: #ff9800; }
+  .note {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #ccc;
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+  .links {
+    margin-top: 25px;
+    width: 90%;
+    max-width: 600px;
+  }
+  .links a {
+    display: block;
+    background: #222;
+    color: #00e676;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    transition: background 0.3s, color 0.3s;
+  }
+  .links a.clicked {
+    background: #004d40;
+    color: #ccc;
+  }
+  .links a:hover {
+    background: #333;
+  }
+  .copied {
+    color: #00e676;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<h2>Bulk PageSpeed Link Generator</h2>
+
+<textarea id="urlInput" placeholder="Enter URLs, one per line..."></textarea>
+
+<div class="buttons">
+  <button id="generateBtn"onclick="generateLinks()">Generate Pagespeed Links</button>
+  <button id="openAllBtn" onclick="openAll()">Open All</button>
+  <button id="copyBtn" onclick="copyAll()">Copy All Links</button>
+</div>
+
+<div class="note">
+    ⚠️ Note: “Open All” opens multiple tabs at once.<br>
+    Please make sure to <strong>allow pop-ups</strong> in your browser for it to work.<br><br>
+    💡 You can also <strong>copy all links</strong> and open them in your own URL bulk opener tool.
+</div>
+
+<div id="copyNotice" class="copied">✅ All links copied to clipboard!</div>
+
+<div class="links" id="linkContainer"></div>
+
+<script>
+let generatedLinks = [];
+
+function getUrls() {
+  return document.getElementById('urlInput').value
+    .trim()
+    .split('\n')
+    .map(u => u.trim())
+    .filter(u => u !== '');
+}
+
+function generateLinks() {
+  const urls = getUrls();
+  const container = document.getElementById('linkContainer');
+  const copyBtn = document.getElementById('copyBtn');
+  container.innerHTML = '';
+  generatedLinks = [];
+
+  if (urls.length === 0) {
+    alert("Please enter at least one URL.");
+    copyBtn.style.display = 'none';
+    return;
+  }
+
+  urls.forEach(url => {
+    const encodedUrl = encodeURIComponent(url);
+    const link = document.createElement('a');
+    link.href = `https://pagespeed.web.dev/report?url=${encodedUrl}`;
+    link.target = '_blank';
+    link.textContent = `Open PageSpeed for: ${url}`;
+    link.onclick = () => link.classList.add('clicked');
+    container.appendChild(link);
+    generatedLinks.push(link.href);
+  });
+
+  copyBtn.style.display = 'inline-block';
+}
+
+function openAll() {
+  const urls = generatedLinks.length ? generatedLinks : getUrls().map(u => `https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`);
+  if (urls.length === 0) {
+    alert("Please enter at least one URL.");
+    return;
+  }
+
+  urls.forEach((href, i) => {
+    setTimeout(() => window.open(href, '_blank'), i * 500);
+  });
+}
+
+function copyAll() {
+  if (generatedLinks.length === 0) {
+    alert("Please generate links first.");
+    return;
+  }
+
+  navigator.clipboard.writeText(generatedLinks.join('\n')).then(() => {
+    const notice = document.getElementById('copyNotice');
+    notice.style.display = 'block';
+    setTimeout(() => notice.style.display = 'none', 2000);
+  });
+}
+</script>
+</body>
+</html>
